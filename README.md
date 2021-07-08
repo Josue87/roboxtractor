@@ -76,6 +76,17 @@ echo http://example.com | roboxtractor -v
 ```
 # 🚀 Examples
 
+Let's take a look at some examples. We have the following file:
+
+![image](https://user-images.githubusercontent.com/16885065/124949652-0bfb8c00-e012-11eb-83b7-2c4805570626.png)
+
+Extracting endpoints:
+
+![image](https://user-images.githubusercontent.com/16885065/124948941-6ea05800-e011-11eb-96a1-f08ed2c5e53b.png)
+
+Extracting URLs:
+
+![image](https://user-images.githubusercontent.com/16885065/124949506-ea9aa000-e011-11eb-8852-be0460b737e9.png)
 
 
 # 🤗 Thanks to 
