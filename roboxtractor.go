@@ -73,7 +73,7 @@ func requestURL(url string, verbose bool) (string, int) {
 	}
 	client := &http.Client{
 		Transport: tr,
-		Timeout:   time.Second * 5}
+		Timeout:   time.Second * 6}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		printError("-", err.Error(), verbose)
@@ -152,10 +152,13 @@ func work(urlCheck string, mode uint, verbose bool) bool {
 		}
 		allDataPrint = append(allDataPrint, finalEndpoint)
 		var finalPrint string
+		for strings.HasPrefix(finalEndpoint, "/") {
+			finalEndpoint = finalEndpoint[1:] // Ex. /*/test or /*/*/demo
+		}
 		if mode == 0 {
-			finalPrint = urlCheck + finalEndpoint
+			finalPrint = urlCheck + "/" + finalEndpoint
 		} else {
-			finalPrint = finalEndpoint[1:] // remove first /
+			finalPrint = finalEndpoint // remove first /
 		}
 		if len(finalPrint) > 0 {
 			fmt.Println(finalPrint)
@@ -179,7 +182,7 @@ func main() {
 		scanner := bufio.NewScanner(os.Stdin)
 		for scanner.Scan() {
 			start(scanner.Text(), *mode, *verbose)
-			if *mode == 0 {
+			if *mode == 0 && *verbose {
 				println("")
 			}
 		}
