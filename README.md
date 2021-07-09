@@ -84,11 +84,19 @@ Let's take a look at some examples. We have the following file:
 
 Extracting endpoints:
 
-![image](https://user-images.githubusercontent.com/16885065/124948941-6ea05800-e011-11eb-96a1-f08ed2c5e53b.png)
+![image](https://user-images.githubusercontent.com/16885065/125102251-5eed4600-e0db-11eb-9626-06ed1e5f7ec7.png)
 
 Extracting URLs:
 
-![image](https://user-images.githubusercontent.com/16885065/124949506-ea9aa000-e011-11eb-8852-be0460b737e9.png)
+![image](https://user-images.githubusercontent.com/16885065/125102445-92c86b80-e0db-11eb-8406-ce0a87e3d78c.png)
+
+Checking Wayback Machine:
+
+![image](https://user-images.githubusercontent.com/16885065/125102688-db802480-e0db-11eb-8c2f-0d3b96733c00.png)
+
+Github had many entries in the file, which were not useful, a cleaning process is done to avoid duplicates or entries with *. Check the following image:
+
+![image](https://user-images.githubusercontent.com/16885065/125103171-62350180-e0dc-11eb-83fc-3b3b400690e8.png)
 
 
 # 🤗 Thanks to 
