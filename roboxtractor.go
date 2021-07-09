@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/rjeczalik/wayback"
 )
 
 const (
@@ -19,6 +21,7 @@ const (
 	yellowColor string = "\033[33m"
 	redColor    string = "\033[31m"
 	resetColor  string = "\033[0m"
+	layoutISO          = "2006-01-02"
 )
 
 func banner(silent bool) {
@@ -33,7 +36,7 @@ func banner(silent bool) {
 	
   > By @JosueEncinar
   > Extract endpoints marked as disallow in robots.txt file										   
-	  `
+  `
 		println(data)
 	}
 }
@@ -73,7 +76,7 @@ func requestURL(url string, verbose bool) (string, int) {
 	}
 	client := &http.Client{
 		Transport: tr,
-		Timeout:   time.Second * 6}
+		Timeout:   time.Second * 7}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		printError("-", err.Error(), verbose)
@@ -102,69 +105,126 @@ func getDisallows(data string) [][]string {
 	return pattern.FindAllStringSubmatch(data, -1)
 }
 
-func start(urlCheck string, mode uint, verbose bool) {
-	// printInfo("i", "Checking "+urlCheck, verbose)
-	if len(strings.Split(urlCheck, ".")) <= 1 {
-		printError("-", "URL format error "+urlCheck, verbose)
-		return
+func treatEndpoint(urlCheck string, entry string, endpoints []string, mode uint) []string {
+	aux := strings.Split(entry, "Disallow:")
+	if len(aux) <= 1 {
+		return endpoints
 	}
-	if !strings.HasPrefix(urlCheck, "http") {
-		if !(work("https://"+urlCheck, mode, verbose)) {
-			work("http://"+urlCheck, mode, verbose)
-		}
+	endpoint := strings.Trim(aux[1], " ")
+	if endpoint == "/" || endpoint == "*" || endpoint == "" {
+		return endpoints
+	}
+	finalEndpoint := strings.Replace(endpoint, "*", "", -1)
+
+	var finalPrint string
+	for strings.HasPrefix(finalEndpoint, "/") {
+		finalEndpoint = finalEndpoint[1:] // Ex. /*/test or /*/*/demo
+	}
+	if strings.HasSuffix(finalEndpoint, "/") {
+		finalEndpoint = finalEndpoint[0 : len(finalEndpoint)-1]
+	}
+	if mode == 0 {
+		finalPrint = urlCheck + "/" + finalEndpoint
 	} else {
-		work(urlCheck, mode, verbose)
+		finalPrint = finalEndpoint
+	}
+
+	if len(finalPrint) > 0 {
+		if containsElement(endpoints, finalPrint) { // Avoid duplicates. Ex. view/ view/*
+			return endpoints
+		}
+		endpoints = append(endpoints, finalPrint)
+		fmt.Println(finalPrint)
+	}
+	return endpoints
+}
+
+func waybackMachine(urlCheck string, endpoints []string, verbose bool, mode uint) {
+	currentYear := time.Now().Year()
+	robots := "/robots.txt"
+	startYear := currentYear - 5 // Check last 5 years (It ignores current year)
+	url := "https://web.archive.org/web/"
+	lastURL := ""
+	for startYear < currentYear {
+		timestamp, err := wayback.ParseTimestamp(layoutISO, fmt.Sprintf("%04d-01-01", startYear))
+		wbMsg := fmt.Sprintf("%s. Wayback Machine Year %d", urlCheck, startYear)
+		startYear += 1
+		if err != nil {
+			printError(fmt.Sprintf("WB %d", startYear), err.Error(), verbose)
+			continue
+		}
+		_, t, err := wayback.AvailableAt(urlCheck, timestamp)
+		if err != nil {
+			printError(fmt.Sprintf("WB %d", startYear), err.Error(), verbose)
+			continue
+		}
+		date := fmt.Sprintf("%04d%02d%02d%02d%02d%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
+		finalurl := url + date + "if_/" + urlCheck
+		if finalurl == lastURL {
+			printInfo("i", fmt.Sprintf("Skiping year %d. Same snapshot as previous", startYear-1), verbose)
+			continue
+		}
+		lastURL = finalurl
+		response, status := requestURL(finalurl+robots, verbose)
+
+		if status == 200 {
+			endpoints = parseResponse(wbMsg, urlCheck, response, endpoints, verbose, mode)
+		} else {
+			if status > 0 {
+				printError(strconv.Itoa(status), wbMsg, verbose)
+			}
+		}
 	}
 }
 
-func work(urlCheck string, mode uint, verbose bool) bool {
-	var allDataPrint []string
+func work(urlCheck string, mode uint, verbose bool, wayback bool) bool {
+	var endpoints []string
+	success := true
 	robots := "/robots.txt"
 	if strings.HasSuffix(urlCheck, "/") {
 		urlCheck = urlCheck[0 : len(urlCheck)-1]
 	}
 	response, status := requestURL(urlCheck+robots, verbose)
 	stringStatus := strconv.Itoa(status)
-	if status != 200 {
+	if status == 200 {
+		endpoints = parseResponse(urlCheck, urlCheck, response, endpoints, verbose, mode)
+	} else {
 		if status > 0 {
 			printError(stringStatus, urlCheck, verbose)
 		}
-		return false
+		success = false
 	}
+	if wayback {
+		waybackMachine(urlCheck, endpoints, verbose, mode)
+	}
+	return success
+}
 
-	printOk(stringStatus, urlCheck, verbose)
+func parseResponse(msg string, urlCheck string, response string, endpoints []string, verbose bool, mode uint) []string {
+	printOk("200", msg, verbose)
 	allDisallows := getDisallows(response)
 	if len(allDisallows) == 0 && verbose {
 		printInfo("i", "Nothing found here...", verbose)
 	}
+	printInfo("i", fmt.Sprintf("Total entries marked as disallow: %d. Parsing and cleaning...", len(allDisallows)), verbose)
 	for _, entry := range allDisallows {
-		aux := strings.Split(entry[0], "Disallow:")
-		if len(aux) <= 1 {
-			continue
-		}
-		endpoint := strings.Trim(aux[1], " ")
-		if endpoint == "/" || endpoint == "*" || endpoint == "" {
-			continue
-		}
-		finalEndpoint := strings.Replace(endpoint, "*", "", -1)
-		if containsElement(allDataPrint, finalEndpoint) { // Avoid duplicates. Ex. view/ view/*
-			continue
-		}
-		allDataPrint = append(allDataPrint, finalEndpoint)
-		var finalPrint string
-		for strings.HasPrefix(finalEndpoint, "/") {
-			finalEndpoint = finalEndpoint[1:] // Ex. /*/test or /*/*/demo
-		}
-		if mode == 0 {
-			finalPrint = urlCheck + "/" + finalEndpoint
-		} else {
-			finalPrint = finalEndpoint // remove first /
-		}
-		if len(finalPrint) > 0 {
-			fmt.Println(finalPrint)
-		}
+		endpoints = treatEndpoint(urlCheck, entry[0], endpoints, mode)
 	}
-	return true
+	return endpoints
+}
+
+func start(urlCheck string, mode uint, verbose bool, wayback bool) {
+	if len(strings.Split(urlCheck, ".")) <= 1 {
+		printError("-", "URL format error "+urlCheck, verbose)
+		return
+	}
+	if !strings.HasPrefix(urlCheck, "http") {
+		if !(work("https://"+urlCheck, mode, verbose, wayback)) {
+			work("http://"+urlCheck, mode, verbose, wayback)
+		}
+	} else {
+		work(urlCheck, mode, verbose, wayback)
+	}
 }
 
 func main() {
@@ -172,16 +232,17 @@ func main() {
 	// Check the tweet https://twitter.com/remonsec/status/1410481151433576449
 	url := flag.String("u", "", "URL to extract endpoints marked as disallow in robots.txt file")
 	mode := flag.Uint("m", 1, "Extract URLs (0) // Extract endpoints to generate a wordlist  (>1)")
+	wayback := flag.Bool("wb", false, "Check Wayback Machine. Check 5 years (Slow mode)")
 	verbose := flag.Bool("v", false, "Verbose mode. Displays additional information at each step")
 	silent := flag.Bool("s", false, "Silen mode doesn't show banner")
 	flag.Parse()
 	banner(*silent)
 	if *url != "" {
-		start(*url, *mode, *verbose)
+		start(*url, *mode, *verbose, *wayback)
 	} else {
 		scanner := bufio.NewScanner(os.Stdin)
 		for scanner.Scan() {
-			start(scanner.Text(), *mode, *verbose)
+			start(scanner.Text(), *mode, *verbose, *wayback)
 			if *mode == 0 && *verbose {
 				println("")
 			}

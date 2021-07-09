@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/badge/license-GNU-green.svg?style=square&logo=gnu">
   </a>
   <a href="https://github.com/Josue87/roboxtractor">
-    <img src="https://img.shields.io/badge/version-0.1b-yellow.svg?style=square&logo=github">
+    <img src="https://img.shields.io/badge/version-0.2b-yellow.svg?style=square&logo=github">
   </a>
    <a href="https://twitter.com/JosueEncinar">
     <img src="https://img.shields.io/badge/author-@JosueEncinar-orange.svg?style=square&logo=twitter">
@@ -19,7 +19,7 @@
 
 
 <p align="center">
-This tool has been developed to extract endpoints marked as disallow in robots.txt file.
+This tool has been developed to extract endpoints marked as disallow in robots.txt file. It crawls the file directly on the web and has a waybackmachine query mode (1 query for each of the previous 5 years).
 </p>
 <br/>
 
@@ -53,6 +53,7 @@ The flags that can be used to launch the tool:
 |:----:|:----:|:------------|:--------|
 | **u** | string | URL to extract endpoints marked as disallow in robots.txt file. | `-u https://example.com` |
 | **m** | uint |  Extract URLs (0) // Extract endpoints to generate a wordlist (>1 default) | `-m 1` |
+| **wb** | bool |  Check Wayback Machine. Check 5 years (Slow mode) | `-wb` |
 | **v** | bool |  Verbose mode.  Displays additional information at each step | `-v` |
 | **s** | bool |  Silen mode doesn't show banner | `-s` |
 
@@ -69,10 +70,11 @@ The following are some examples of use:
 ```
 roboxtractor --help
 cat urls.txt | roboxtractor -m 0 -v
-roboxtractor -u https://www.example.com -m 1 
+roboxtractor -u https://www.example.com -m 1 -wb
 cat urls.txt | roboxtractor -m 1 -s > ./customwordlist.txt
 cat urls.txt | roboxtractor -s -v | uniq > ./uniquewordlist.txt
 echo http://example.com | roboxtractor -v
+echo http://example.com | roboxtractor -v -wb
 ```
 # 🚀 Examples
 
