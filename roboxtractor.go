@@ -118,10 +118,18 @@ func treatEndpoint(urlCheck string, entry string, endpoints []string, mode uint)
 
 	var finalPrint string
 	for strings.HasPrefix(finalEndpoint, "/") {
-		finalEndpoint = finalEndpoint[1:] // Ex. /*/test or /*/*/demo
+		if len(finalEndpoint) >= 1 {
+			finalEndpoint = finalEndpoint[1:] // Ex. /*/test or /*/*/demo
+		} else {
+			return endpoints
+		}
 	}
-	if strings.HasSuffix(finalEndpoint, "/") {
-		finalEndpoint = finalEndpoint[0 : len(finalEndpoint)-1]
+	for strings.HasSuffix(finalEndpoint, "/") {
+		if len(finalEndpoint) >= 1 {
+			finalEndpoint = finalEndpoint[0 : len(finalEndpoint)-1]
+		} else {
+			return endpoints
+		}
 	}
 	if mode == 0 {
 		finalPrint = urlCheck + "/" + finalEndpoint
