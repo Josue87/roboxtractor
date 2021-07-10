@@ -19,7 +19,12 @@
 
 
 <p align="center">
-This tool has been developed to extract endpoints marked as disallow in robots.txt file. It crawls the file directly on the web and has a waybackmachine query mode (1 query for each of the previous 5 years).
+This tool has been developed to extract endpoints marked as disallow in robots.txt file. It crawls the file directly on the web and has a wayback machine query mode (1 query for each of the previous 5 years).
+
+Possible uses of **roboXtractor**:
+
+* Generate a customized wordlist of endpoints for later use in a fuzzing tool (**-m 1**).
+* Generate a list of URLs to visit (**-m 0**). 
 </p>
 <br/>
 
@@ -63,6 +68,8 @@ You can ignore the -u flag and pass a file directly as follows:
 cat urls.txt | roboxtractor -m 1 -v
 ```
 
+Only the results are written to the standard output. The banner and information messages with the **-v** flag are redirected to the error output, 
+
 # 👾 Usage
 
 The following are some examples of use:
@@ -98,6 +105,11 @@ Github had many entries in the file, which were not useful, a cleaning process i
 
 ![image](https://user-images.githubusercontent.com/16885065/125103171-62350180-e0dc-11eb-83fc-3b3b400690e8.png)
 
+For example:
+
+* `/gist/\*/\*/\*` is transformed as `gist`.
+* `/\*/tarball` is trasformed as `tarball`.
+* `/`, `/*` or similar entries are removed.
 
 # 🤗 Thanks to 
 
