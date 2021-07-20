@@ -107,10 +107,10 @@ Github had many entries in the file, which were not useful, a cleaning process i
 
 For example:
 
-* `/gist/\*/\*/\*` is transformed as `gist`.
-* `/\*/tarball` is trasformed as `tarball`.
+* `/gist/*/*/*` is transformed as `gist`.
+* `/*/tarball` is trasformed as `tarball`.
 * `/`, `/*` or similar entries are removed.
 
 # 🤗 Thanks to 
 
-The idea came from a tweet from [@remonsec](https://twitter.com/remonsec) that did something similar in a bash script. Check the [tweet](https://twitter.com/remonsec/status/1410481151433576449).
+The idea comes from a tweet written by [@remonsec](https://twitter.com/remonsec) that did something similar in a bash script. Check the [tweet](https://twitter.com/remonsec/status/1410481151433576449).
