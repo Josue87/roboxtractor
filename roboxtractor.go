@@ -211,8 +211,9 @@ func work(urlCheck string, mode uint, verbose bool, wayback bool) bool {
 func parseResponse(msg string, urlCheck string, response string, endpoints []string, verbose bool, mode uint) []string {
 	printOk("200", msg, verbose)
 	allDisallows := getDisallows(response)
-	if len(allDisallows) == 0 && verbose {
+	if len(allDisallows) == 0 {
 		printInfo("i", "Nothing found here...", verbose)
+		return endpoints
 	}
 	printInfo("i", fmt.Sprintf("Total entries marked as disallow: %d. Parsing and cleaning...", len(allDisallows)), verbose)
 	for _, entry := range allDisallows {
